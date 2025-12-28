@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from typing import Optional
 
 app = FastAPI()
 
@@ -11,7 +12,7 @@ def user() -> dict:
 def contacts() -> int:
     return 902991188
 
-post = [
+posts = [
     {"id" : 1,
      "title" : "Name 1",
      "text" : "Text 1"
@@ -28,6 +29,23 @@ post = [
     }
 ]
 
-@app.get("/posts")
-async def posts() -> list:
-    return post
+@app.get("/items")
+async def items() -> list:
+    return posts
+
+@app.get("/items/{id}")
+async def items(id: int) -> dict:
+    for post in posts:
+        if post['id'] == id :
+            return post
+
+    raise HTTPException(status_code=404, detail="Post not found")
+
+@app.get("/search")
+async def search(post_id: Optional[int] = None) -> dict:
+    if post_id is not None:
+        for post in posts:
+            if post["id"] == post_id:
+                return post
+        raise HTTPException(status_code=404, detail="Post not found")
+    return {"data": "No post id provided"}
