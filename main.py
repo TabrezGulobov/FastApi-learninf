@@ -89,7 +89,7 @@ async def add_item(post: PostCrate) -> Post:
     return Post(**new_post)
 
 @app.get("/items/{id}")
-async def items(id: Annotated[int, Path(title = ' Здесь указывается id поста')]) -> Post:
+async def items(id: Annotated[int, Path(..., title = ' Здесь указывается id поста')], ge=1, lt=100 ) -> Post:
     for post in posts:
         if post['id'] == id :
             return Post(**post)
