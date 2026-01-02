@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException, Path, Query,Body
 from typing import Optional,List, Dict, Annotated
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
@@ -31,6 +31,11 @@ class PostCrate(BaseModel):
     body: str
     author_id : int
 
+class AuthorCreate(BaseModel):
+    name:Annotated[
+        str, Field(..., title='Author name', min_length=2, max_length=20)
+    ]
+    age: Annotated[int, Field(title='Auhtor age', ge = 1, le = 100)]
 
 authors =[
     {
@@ -88,6 +93,24 @@ async def add_item(post: PostCrate) -> Post:
     posts.append(new_post)
     return Post(**new_post)
 
+
+@app.post("/author/add")
+async def add_item(author: Annotated[
+    AuthorCreate,
+    Body(..., example={
+        "name": "AuthorName",
+        "age":1
+    })
+]) -> Author:
+
+    new_post_id = len(posts) + 1
+
+    new_author = {'id':new_post_id, 'title':post.title, 'body':post.body, 'author': post_author}
+    authors.append(new_author)
+    return Author(**new_author)
+
+
+
 @app.get("/items/{id}")
 async def items(id: Annotated[int, Path(..., title = ' Здесь указывается id поста')], ge=1, lt=100 ) -> Post:
     for post in posts:
@@ -97,7 +120,10 @@ async def items(id: Annotated[int, Path(..., title = ' Здесь указыва
     raise HTTPException(status_code=404, detail="Post not found")
 
 @app.get("/search")
-async def search(post_id: Optional[int] = None) -> Dict[str, Optional[Post]]:
+async def search(post_id: Annotated[
+    Optional[int],
+    Query(title="ID of post to search", ge = 1 , le = 50)
+]) -> Dict[str, Optional[Post]]:
     if post_id is not None:
         for post in posts:
             if post["id"] == post_id:
